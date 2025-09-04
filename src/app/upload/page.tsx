@@ -1,9 +1,39 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Upload() {
+  console.log('Upload page loaded');
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/check-cookie');
+      const data = await response.json();
+      console.log('Auth check result:', data);
+
+      if (data.hasToken) {
+        setIsAuthenticated(true);
+      } else {
+        console.log('No token found, redirecting to login');
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      window.location.href = '/login';
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [jobRole, setJobRole] = useState('');
   const [customRole, setCustomRole] = useState('');
@@ -54,6 +84,28 @@ export default function Upload() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log('Logging out...');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        console.log('Logout successful, redirecting to home');
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed');
+        // Still redirect even if logout fails
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails
+      window.location.href = '/';
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
@@ -69,12 +121,31 @@ export default function Upload() {
       return;
     }
 
-    // Handle upload logic here
+    // Simulate upload process
     console.log('Uploading:', {
       file: selectedFile,
       jobRole: jobRole === 'Other' ? customRole : jobRole
     });
+
+    // Show loading state and redirect to dashboard
+    alert('CV uploaded successfully! Redirecting to dashboard...');
+    window.location.href = '/dashboard';
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -87,11 +158,17 @@ export default function Upload() {
             </Link>
             <div className="flex items-center space-x-4">
               <Link
-                href="/login"
+                href="/dashboard"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Sign Out
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -215,7 +292,7 @@ export default function Upload() {
                     value={customRole}
                     onChange={(e) => setCustomRole(e.target.value)}
                     placeholder="e.g., Machine Learning Engineer"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 bg-white"
                   />
                 </div>
               )}
