@@ -46,7 +46,7 @@ export default function Signup() {
         console.log('Signup failed:', data.error);
         setError(data.error || 'Something went wrong');
       }
-    } catch (error) {
+    } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -179,7 +179,7 @@ export default function Signup() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              By signing up, you'll get your first CV analysis free!
+              By signing up, you&apos;ll get your first CV analysis free!
             </p>
           </div>
         </form>

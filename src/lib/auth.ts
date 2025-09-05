@@ -9,6 +9,12 @@ export interface AuthUser {
   email: string;
 }
 
+interface JWTPayload {
+  userId: string;
+  iat?: number;
+  exp?: number;
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies();
@@ -18,7 +24,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
     await connectToDatabase();
     const user = await User.findById(decoded.userId);

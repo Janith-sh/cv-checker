@@ -47,16 +47,19 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Signup error:', error);
 
     // Handle mongoose validation errors
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err: any) => err.message);
-      return NextResponse.json(
-        { error: messages.join(', ') },
-        { status: 400 }
-      );
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
+      const validationError = error as { errors?: Record<string, { message: string }> };
+      if (validationError.errors) {
+        const messages = Object.values(validationError.errors).map((err) => err.message);
+        return NextResponse.json(
+          { error: messages.join(', ') },
+          { status: 400 }
+        );
+      }
     }
 
     return NextResponse.json(

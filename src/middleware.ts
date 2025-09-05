@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) { // eslint-disable-line @typescript-eslint/no-unused-vars
   // Temporarily disabled for debugging
   return NextResponse.next();
 }

@@ -44,7 +44,7 @@ export default function Login() {
         console.log('Login failed:', data.error);
         setError(data.error || 'Something went wrong');
       }
-    } catch (error) {
+    } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -63,7 +63,7 @@ export default function Login() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
               Sign up here
             </Link>

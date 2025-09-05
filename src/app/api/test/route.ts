@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectToDatabase();
 
@@ -14,10 +14,11 @@ export async function GET(request: NextRequest) {
       userCount: users.length,
       users: users
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Database test error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Database connection failed', details: error.message },
+      { error: 'Database connection failed', details: errorMessage },
       { status: 500 }
     );
   }

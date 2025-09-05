@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 
@@ -43,7 +44,6 @@ export async function POST(request: NextRequest) {
     console.log('Password comparison result:', isPasswordValid);
 
     // Also try direct bcrypt comparison for debugging
-    const bcrypt = require('bcryptjs');
     const directComparison = await bcrypt.compare(password, user.password);
     console.log('Direct bcrypt comparison:', directComparison);
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     console.log('Cookie set successfully');
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
