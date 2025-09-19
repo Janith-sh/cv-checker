@@ -106,7 +106,9 @@ export default function Upload() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
       alert('Please select a CV file');
@@ -121,15 +123,50 @@ export default function Upload() {
       return;
     }
 
-    // Simulate upload process
-    console.log('Uploading:', {
-      file: selectedFile,
-      jobRole: jobRole === 'Other' ? customRole : jobRole
-    });
+    setIsAnalyzing(true);
 
-    // Show loading state and redirect to dashboard
-    alert('CV uploaded successfully! Redirecting to dashboard...');
-    window.location.href = '/dashboard';
+    try {
+      console.log('Starting CV analysis...');
+      const formData = new FormData();
+      formData.append('cv', selectedFile);
+      formData.append('jobRole', jobRole === 'Other' ? customRole : jobRole);
+
+      console.log('Sending request to /api/analyze-cv');
+      const response = await fetch('/api/analyze-cv', {
+        method: 'POST',
+        body: formData,
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.error('Non-JSON response received:', textResponse);
+        throw new Error('Server returned an invalid response. Please check the console for details.');
+      }
+
+      const result = await response.json();
+      console.log('Parsed JSON result:', result);
+
+      if (!response.ok) {
+        throw new Error(result.error || `Server error: ${response.status}`);
+      }
+
+      // Store analysis result in sessionStorage for the dashboard
+      sessionStorage.setItem('cvAnalysis', JSON.stringify(result));
+      
+      // Redirect to dashboard to show results
+      window.location.href = '/dashboard';
+      
+    } catch (error) {
+      console.error('Analysis error:', error);
+      alert(`Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   if (isLoading) {
@@ -157,6 +194,15 @@ export default function Upload() {
               ReadyCV
             </Link>
             <div className="flex items-center space-x-4">
+              <Link
+                href="/chat-test"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>AI Chat</span>
+              </Link>
               <Link
                 href="/dashboard"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -303,10 +349,17 @@ export default function Upload() {
           <div className="text-center">
             <button
               type="submit"
-              disabled={!selectedFile || !jobRole || (jobRole === 'Other' && !customRole.trim())}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-lg text-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none transform hover:-translate-y-1"
+              disabled={!selectedFile || !jobRole || (jobRole === 'Other' && !customRole.trim()) || isAnalyzing}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-lg text-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none transform hover:-translate-y-1 flex items-center justify-center space-x-2"
             >
-              Analyze My CV
+              {isAnalyzing ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Analyzing CV...</span>
+                </>
+              ) : (
+                <span>Analyze My CV</span>
+              )}
             </button>
             <p className="text-sm text-gray-600 mt-4">
               Your CV will be analyzed against ATS systems and industry standards
