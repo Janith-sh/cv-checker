@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         `;
       }
     } catch (parseError) {
-      console.log('PDF parsing failed, using fallback text');
+      console.log('PDF parsing failed, using fallback text:', parseError instanceof Error ? parseError.message : 'Unknown error');
       cvText = `Professional CV for ${jobRole} position. 
       This is a sample analysis due to PDF parsing limitations.
       
@@ -182,40 +182,146 @@ export async function POST(request: NextRequest) {
       model: google('gemini-1.5-flash'), // Using Gemini 1.5 Flash which is fast and cost-effective
       schema: CVAnalysisSchema,
       prompt: `
-        You are an expert ATS (Applicant Tracking System) consultant and career advisor. 
+        You are an expert ATS (Applicant Tracking System) consultant and career advisor.
         Analyze the following CV for the job role: "${jobRole}".
-        
+
+        IMPORTANT SCORING GUIDELINES:
+        - Provide realistic, industry-standard scores for each section
+        - Contact Info: Score 70-100 for complete contact details
+        - Summary: Score 60-95 based on relevance and professionalism
+        - Experience: Score 50-100 based on relevance and achievements
+        - Skills: Score 60-100 based on technical and soft skills match
+        - Education: Score 70-100 for relevant degrees/certifications
+        - Formatting: Score 60-100 for ATS-friendliness
+
         Provide a comprehensive analysis including:
-        1. ATS compatibility assessment
-        2. Section-by-section scoring and feedback
+        1. ATS compatibility assessment with realistic scoring
+        2. Section-by-section scoring and constructive feedback
         3. Keyword analysis relevant to the job role
         4. Specific, actionable recommendations
-        5. Overall match score for the specified role
-        
+        5. Overall match score for the specified role (50-100 range)
+
         Be specific and constructive in your feedback. Focus on what will help this candidate succeed in ATS systems and appeal to hiring managers.
-        
+
         CV Content:
         ${cvText}
-        
+
         Job Role Context: ${jobRole}
-        
+
         Consider industry standards, common ATS systems, and best practices for this specific role.
       `
     });
 
     console.log('AI analysis completed successfully');
 
+    // Calculate standardized overall score based on section scores
+    const analysis = result.object;
+
+    // Extract individual section scores
+    const contactScore = analysis.sections.contactInfo.score;
+    const summaryScore = analysis.sections.summary.score;
+    const experienceScore = analysis.sections.experience.score;
+    const skillsScore = analysis.sections.skills.score;
+    const educationScore = analysis.sections.education.score;
+    const formattingScore = analysis.sections.formatting.score;
+    const matchScore = analysis.matchScore;
+    const keywordDensity = analysis.keywords.density;
+
+    /*
+     * ATS SCORING FORMULA
+     * ===================
+     * Weighted calculation based on industry standards:
+     * - Contact Info: 10% (Basic requirement)
+     * - Summary: 15% (First impression)
+     * - Experience: 30% (Most critical for job matching)
+     * - Skills: 25% (Technical competencies)
+     * - Education: 10% (Background validation)
+     * - Formatting: 10% (ATS compatibility)
+     *
+     * Bonuses:
+     * +5 points if matchScore > 80 (excellent job fit)
+     * +3 points if keywordDensity > 70 (good keyword optimization)
+     *
+     * Final score range: 20-100 (minimum 20 to avoid zero scores)
+     */
+
+    // ATS Weighted calculation formula
+    const weightedScore = (
+      (contactScore * 10) +    // 10%
+      (summaryScore * 15) +    // 15%
+      (experienceScore * 30) + // 30%
+      (skillsScore * 25) +     // 25%
+      (educationScore * 10) +  // 10%
+      (formattingScore * 10)   // 10%
+    ) / 100;
+
+    // Apply bonuses
+    let finalScore = weightedScore;
+    if (matchScore > 80) finalScore += 5;
+    if (keywordDensity > 70) finalScore += 3;
+
+    // Ensure reasonable range
+    finalScore = Math.max(20, Math.min(100, Math.round(finalScore)));
+
+    // Update the analysis with standardized score
+    analysis.overallScore = finalScore;
+
+    console.log('ATS Score calculation:', {
+      originalScore: result.object.overallScore,
+      finalScore,
+      sectionBreakdown: {
+        contact: contactScore,
+        summary: summaryScore,
+        experience: experienceScore,
+        skills: skillsScore,
+        education: educationScore,
+        formatting: formattingScore
+      },
+      bonuses: {
+        matchScore,
+        keywordDensity
+      },
+      weightedCalculation: `(${contactScore}×10 + ${summaryScore}×15 + ${experienceScore}×30 + ${skillsScore}×25 + ${educationScore}×10 + ${formattingScore}×10) ÷ 100 = ${weightedScore}`
+    });
+
     // Store analysis result in database (optional - you can add this later)
     // const analysisRecord = await saveAnalysisToDatabase(result.object, jobRole);
 
+    // Add score interpretation
+    const getScoreInterpretation = (score: number) => {
+      if (score >= 90) return { level: 'Excellent', description: 'Outstanding CV with excellent ATS compatibility' };
+      if (score >= 80) return { level: 'Very Good', description: 'Strong CV with good ATS compatibility and minor improvements needed' };
+      if (score >= 70) return { level: 'Good', description: 'Solid CV with decent ATS compatibility but room for improvement' };
+      if (score >= 60) return { level: 'Fair', description: 'Acceptable CV but needs significant improvements for better ATS performance' };
+      if (score >= 50) return { level: 'Needs Work', description: 'CV requires substantial improvements to pass ATS systems' };
+      return { level: 'Poor', description: 'CV needs major revisions to be ATS-compatible' };
+    };
+
+    const interpretation = getScoreInterpretation(finalScore);
+
     return NextResponse.json({
       success: true,
-      analysis: result.object,
+      analysis: {
+        ...analysis,
+        scoreInterpretation: interpretation
+      },
       metadata: {
         jobRole,
         fileName: file.name,
         fileSize: file.size,
-        analyzedAt: new Date().toISOString()
+        analyzedAt: new Date().toISOString(),
+        scoringMethod: 'weighted_ats_formula',
+        scoreBreakdown: {
+          contact: contactScore,
+          summary: summaryScore,
+          experience: experienceScore,
+          skills: skillsScore,
+          education: educationScore,
+          formatting: formattingScore,
+          matchScore,
+          keywordDensity,
+          finalScore
+        }
       }
     });
 
@@ -267,9 +373,48 @@ export async function POST(request: NextRequest) {
 
 // Health check endpoint
 export async function GET() {
+  // Test the ATS scoring formula with sample data
+  const testData = {
+    contactScore: 85,
+    summaryScore: 78,
+    experienceScore: 92,
+    skillsScore: 88,
+    educationScore: 82,
+    formattingScore: 75,
+    matchScore: 85,
+    keywordDensity: 75
+  };
+
+  // ATS Weighted calculation formula
+  const weightedScore = (
+    (testData.contactScore * 10) +    // 10%
+    (testData.summaryScore * 15) +    // 15%
+    (testData.experienceScore * 30) + // 30%
+    (testData.skillsScore * 25) +     // 25%
+    (testData.educationScore * 10) +  // 10%
+    (testData.formattingScore * 10)   // 10%
+  ) / 100;
+
+  // Apply bonuses
+  let finalScore = weightedScore;
+  if (testData.matchScore > 80) finalScore += 5;
+  if (testData.keywordDensity > 70) finalScore += 3;
+
+  // Ensure reasonable range
+  finalScore = Math.max(20, Math.min(100, Math.round(finalScore)));
+
   return NextResponse.json({
-    status: 'OK',
-    service: 'CV Analysis API',
-    timestamp: new Date().toISOString()
+    success: true,
+    testData,
+    calculation: {
+      weightedScore: Math.round(weightedScore * 100) / 100,
+      bonuses: {
+        matchScoreBonus: testData.matchScore > 80 ? 5 : 0,
+        keywordDensityBonus: testData.keywordDensity > 70 ? 3 : 0
+      },
+      finalScore,
+      formula: `(${testData.contactScore}×10 + ${testData.summaryScore}×15 + ${testData.experienceScore}×30 + ${testData.skillsScore}×25 + ${testData.educationScore}×10 + ${testData.formattingScore}×10) ÷ 100 + bonuses`
+    },
+    message: 'ATS scoring formula test completed successfully'
   });
 }

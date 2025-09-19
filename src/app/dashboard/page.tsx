@@ -5,6 +5,10 @@ import { useState, useEffect } from "react";
 
 interface CVAnalysis {
   overallScore: number;
+  scoreInterpretation?: {
+    level: string;
+    description: string;
+  };
   sections: {
     contactInfo: {
       score: number;
@@ -133,9 +137,11 @@ export default function Dashboard() {
 
   const getScoreLabel = (score: number) => {
     if (score >= 90) return 'Excellent';
-    if (score >= 80) return 'Good';
-    if (score >= 70) return 'Fair';
-    return 'Needs Improvement';
+    if (score >= 80) return 'Very Good';
+    if (score >= 70) return 'Good';
+    if (score >= 60) return 'Fair';
+    if (score >= 50) return 'Needs Work';
+    return 'Poor';
   };
 
   const formatDate = (dateString: string) => {
@@ -173,6 +179,15 @@ export default function Dashboard() {
               ReadyCV
             </Link>
             <div className="flex items-center space-x-4">
+              <Link
+                href="/chat-test"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>AI Chat</span>
+              </Link>
               <Link
                 href="/upload"
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 transition-all duration-200"
@@ -233,7 +248,14 @@ export default function Dashboard() {
                   <div className={`px-4 py-2 rounded-full text-lg font-semibold ${getScoreColor(analysisResult.analysis.overallScore)}`}>
                     {analysisResult.analysis.overallScore}/100
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">{getScoreLabel(analysisResult.analysis.overallScore)}</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {analysisResult.analysis.scoreInterpretation?.level || getScoreLabel(analysisResult.analysis.overallScore)}
+                  </div>
+                  {analysisResult.analysis.scoreInterpretation && (
+                    <div className="text-xs text-gray-500 mt-1 max-w-xs">
+                      {analysisResult.analysis.scoreInterpretation.description}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -243,6 +265,14 @@ export default function Dashboard() {
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Overall Score</h3>
                 <div className="text-3xl font-bold text-gray-900 mb-2">{analysisResult.analysis.overallScore}/100</div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {analysisResult.analysis.scoreInterpretation?.level || getScoreLabel(analysisResult.analysis.overallScore)}
+                </div>
+                {analysisResult.analysis.scoreInterpretation && (
+                  <div className="text-xs text-gray-500 mb-3">
+                    {analysisResult.analysis.scoreInterpretation.description}
+                  </div>
+                )}
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-gradient-to-r from-emerald-600 to-teal-600 h-2 rounded-full transition-all duration-500"

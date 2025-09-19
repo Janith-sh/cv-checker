@@ -36,7 +36,7 @@ export default function ChatTest() {
         setApiStatus('✅ Google Gemini connection successful!');
         setMessages(prev => [
           ...prev,
-          { role: 'user', content: 'Hello Gemini, are you working?', timestamp: new Date() },
+          { role: 'user', content: 'Hello ReadyCV, are you working?', timestamp: new Date() },
           { role: 'assistant', content: data.response, timestamp: new Date() }
         ]);
       } else {
@@ -115,7 +115,7 @@ export default function ChatTest() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              ReadyCV - Gemini AI Test
+              ReadyCV - AI Chat Assistant
             </Link>
             <div className="flex items-center space-x-4">
               <Link
@@ -137,28 +137,28 @@ export default function ChatTest() {
 
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Google Gemini Connection Test</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">ReadyCV AI Chat Assistant</h1>
           <p className="text-gray-600 mb-6">
-            Use this page to test if your Google Gemini API key is working correctly before analyzing CVs.
+            Chat with ReadyCV&apos;s AI assistant to get help with CV optimization, career advice, and ATS insights.
           </p>
 
           {/* Status Section */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">API Status</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">AI Assistant Status</h2>
             <div className="flex space-x-4 mb-4">
               <button
                 onClick={testGemini}
                 disabled={isLoading}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                Test Gemini
+                Test AI Assistant
               </button>
               <button
                 onClick={checkGeminiStatus}
                 disabled={isLoading}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                Check Gemini Status
+                Check AI Status
               </button>
             </div>
             {apiStatus && (
@@ -173,7 +173,7 @@ export default function ChatTest() {
             <div className="h-96 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
-                  No messages yet. Click "Test Connection" or send a message to start.
+                  No messages yet. Click &quot;Test Connection&quot; or send a message to start.
                 </div>
               ) : (
                 messages.map((message, index) => (
@@ -189,7 +189,7 @@ export default function ChatTest() {
                       }`}
                     >
                       <div className="font-medium text-sm mb-1">
-                        {message.role === 'user' ? 'You' : 'Gemini'}
+                        {message.role === 'user' ? 'You' : 'ReadyCV'}
                       </div>
                       <div>{message.content}</div>
                       <div className="text-xs opacity-70 mt-1">
@@ -204,7 +204,7 @@ export default function ChatTest() {
                   <div className="bg-gray-200 text-gray-900 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                      <span>Gemini is thinking...</span>
+                      <span>ReadyCV is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function ChatTest() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type a message to test Gemini..."
+                  placeholder="Ask ReadyCV about CV optimization, career advice, or ATS insights..."
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isLoading}
                 />
@@ -236,12 +236,12 @@ export default function ChatTest() {
 
           {/* Instructions */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Troubleshooting</h3>
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">How to Use ReadyCV Chat</h3>
             <ul className="text-blue-800 space-y-1 text-sm">
-              <li>• If you get errors, check your Gemini API key at aistudio.google.com</li>
-              <li>• Make sure the Generative Language API is enabled in Google Cloud</li>
-              <li>• Gemini has generous free tier limits</li>
-              <li>• Check usage at Google AI Studio dashboard</li>
+              <li>• Ask about CV optimization tips and ATS best practices</li>
+              <li>• Get career advice and industry insights</li>
+              <li>• Learn about resume formatting and keyword optimization</li>
+              <li>• Get help with job application strategies</li>
             </ul>
           </div>
         </div>
