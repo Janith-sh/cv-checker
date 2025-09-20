@@ -316,7 +316,7 @@ export default function Upload() {
                   id="jobRole"
                   value={jobRole}
                   onChange={(e) => setJobRole(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-gray-900 font-medium"
                 >
                   <option value="">Select a job role...</option>
                   {jobRoles.map((role) => (

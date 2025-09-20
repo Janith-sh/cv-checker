@@ -13,41 +13,6 @@ export default function ChatTest() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiStatus, setApiStatus] = useState<string>('');
-
-  const testGemini = async () => {
-    setIsLoading(true);
-    setApiStatus('Testing Google Gemini connection...');
-    
-    try {
-      const response = await fetch('/api/gemini-test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Hello, are you working?'
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        setApiStatus('✅ Google Gemini connection successful!');
-        setMessages(prev => [
-          ...prev,
-          { role: 'user', content: 'Hello ReadyCV, are you working?', timestamp: new Date() },
-          { role: 'assistant', content: data.response, timestamp: new Date() }
-        ]);
-      } else {
-        setApiStatus(`❌ Gemini Error: ${data.error}`);
-      }
-    } catch (error) {
-      setApiStatus(`❌ Gemini Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-    
-    setIsLoading(false);
-  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -95,19 +60,6 @@ export default function ChatTest() {
     setIsLoading(false);
   };
 
-  const checkGeminiStatus = async () => {
-    setApiStatus('Checking Google Gemini status...');
-    
-    try {
-      const response = await fetch('/api/gemini-status');
-      const data = await response.json();
-      
-      setApiStatus(`Gemini Status: ${JSON.stringify(data, null, 2)}`);
-    } catch (error) {
-      setApiStatus(`Gemini status check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Navigation */}
@@ -141,32 +93,6 @@ export default function ChatTest() {
           <p className="text-gray-600 mb-6">
             Chat with ReadyCV&apos;s AI assistant to get help with CV optimization, career advice, and ATS insights.
           </p>
-
-          {/* Status Section */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">AI Assistant Status</h2>
-            <div className="flex space-x-4 mb-4">
-              <button
-                onClick={testGemini}
-                disabled={isLoading}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                Test AI Assistant
-              </button>
-              <button
-                onClick={checkGeminiStatus}
-                disabled={isLoading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                Check AI Status
-              </button>
-            </div>
-            {apiStatus && (
-              <pre className="text-sm bg-white p-3 rounded border overflow-auto max-h-32">
-                {apiStatus}
-              </pre>
-            )}
-          </div>
 
           {/* Chat Section */}
           <div className="border border-gray-200 rounded-lg">
@@ -220,13 +146,13 @@ export default function ChatTest() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   placeholder="Ask ReadyCV about CV optimization, career advice, or ATS insights..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-gray-500"
                   disabled={isLoading}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={isLoading || !input.trim()}
-                  className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                  className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors"
                 >
                   Send
                 </button>
